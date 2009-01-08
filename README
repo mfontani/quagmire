@@ -1,0 +1,58 @@
+QUAGMIRE
+
+From http://en.wiktionary.org/wiki/quagmire:
+Quagmire /"kwQg.maI@(r)/
+  2. (figuratively) A mixed up and troubled situation; a hopeless tangle; a predicament. 
+
+OVERVIEW
+
+This perl/Tk/Moose program should aid D&D 4th Edition Dungeon Masters to better handle the
+quagmire that is D&D 4th Edition encounters between player characters and monsters.
+
+GOALS
+
+You should be able to create a party of characters and a party of monsters, assign them
+statistics and powers, save them on a MooseX::Storage YAML file or load them up, and then
+start the encounter itself.
+
+Most of the chores of encounter tracking should be alleviated by using this tool. Choices
+should always be overridable by the user: the program won't just roll dices: it will give
+the user the ability to either roll dices and insert the value, accept the default value
+presented, or decline the action altogether.
+
+Depending on the user's choice, the initiative for the monsters and players may be
+calculated by the program, or inputed; Attack rolls and damages, ongoing damage, ongoing
+healing, and similar effects should also receive the same treatment. Conditions and states
+may be added to or removed from entities anytime during the encounter.
+
+HISTORY
+
+Tracking the multitude of hit points, damage types, resistances, powers and effects using
+graph paper only may soon overwhelm and become too much of a chore for the Dungeon Master.
+
+This collection of modules started with the aim of providing a quick way to print out a
+PDF "encounter sheet" for every encounter in an adventure, showing all player characters
+and monsters, their defenses, hit points, xp value and similar basic statistics.
+
+Another PDF was created, to cut out "initiative count cards", showing instead all the
+specific abilities, skills, and powers of all entities in the encounter, to be then
+physically sorted on initiative order and be used as aide.
+
+Currently, the program contains data sets and classes that should be able to do all the
+above and beyond. The current focus is though more on the Tk GUI and its usability.
+
+PERL MODULES NEEDED
+
+See META.yaml. If you're missing them, you should be able to install them using:
+
+$ sudo cpan .
+
+Alternatively, look at the list on META.yaml or run something like:
+
+$ ack -h --perl '^(use|require\W)' | sort | uniq
+
+COPYRIGHT
+
+Copyright 2008-2009 by Marco Fontani <mfontani at cpan.org>.
+This program is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+See http://www.perl.com/perl/misc/Artistic.html

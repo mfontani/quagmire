@@ -1,0 +1,33 @@
+---
+name: Quagmire
+version: 0.23
+author:
+  - Marco Fontani <mfontani@cpan.org>
+abstract: Quagmire - a D&D 4th Edition Encounter Manager
+distribution_type: script
+generated_by: Marco Fontani <mfontani@cpan.org>
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+requires:
+  YAML: 0.66
+  Moose: 0.63
+  MooseX::Storage: 0.15
+  Tk: 804.028
+  Tk::FileSelect: 0
+  Tk::ItemStyle: 0
+  Tk::ROText: 0
+  Tk::Table: 0
+  Tk::TList: 0
+  Tk::Dialog: 0
+  Tk::DialogBox: 0
+  Tk::HList: 0
+  Tk::LabFrame: 0
+  Tk::NoteBook: 0
+  Tk::TextUndo: 0
+  File::Basename: 0
+resources:
+  homepage: http://github.com/mfontani/quagmire/
+  license: http://dev.perl.org/licenses/
+  repository: git://github.com/mfontani/quagmire.git

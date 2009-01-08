@@ -1,0 +1,104 @@
+quagmire.pl (the master program) is made up of three PanedWindows and a status bar:
+
+ /-------------\
+ | A |         | A: the Encounter tracking Frame
+ |   | B       | B: the Initiative List tracking HList
+ -   +---------|
+ |   | C       | C: the current Entity editor
+ |   |         |
+ \===status====/ the status bar
+
+The Encounter tracking frame allows the user to use buttons to:
+(TODO) Advance inititive order to the next entity in the list, kicking off the "round actions" for the entity
+(DONE) Save/Load the current encounter, so that the status may be restored after an interrupted session
+(TODO) Reset the encounter (round 0, option to fully heal/reset monsters and players, etc)
+
+The Initiative List shows a "table" with the following information, per entity:
+initiative count, initiative bonus, mob/player, level, class, ac, fort, ref, will, hp_current/hp_total, hp_temp, name
+The initiative list is sorted on initiative order, but dead entities are always displayed last on the list.
+The entities are colour-coded depending on whether their HP indicate they're >bloodied, dead<X<=bloodied, or dead.
+
+Right clicking on the Initiative List allows the user to:
+- if right clicking anywhere:
+  - Refresh the Initiative list contents (DONE: label "Refresh")
+  - Commit the changes done to an Entity and refresh the list (DONE: label "Commit & Refresh")
+- if right clicking only anywhere an entity isn't displayed:
+  - Add new Player (DONE: adds it to the list, allows double clicking to edit it via the Entity editor)
+  - Add new Monster (DONE: adds it to the list, allows double clicking to edit it via the Entity editor)
+- if right clicking on an entity:
+  - Let the entity use Second Wind (TODO, only stub code)
+  - Let the entity spend a healing surge (DONE: the dialog asks for optional +healing; TODO: modify the Entity)
+  - Damage/Heal Entity (DONE: the dialog asks for +healing or -damage; TODO: modify the Entity)
+  - Add condition to Entity (DONE: the dialog shows conditions list; TODO: remove them; TODO: save ends choice on dialog; TODO: end/beginning of X turn)
+  - Add ongoing damage/heal to Entity (TODO: dialog and all)
+  - New initiative for Entity (TODO: dialog and all)
+
+The Entity Editor allows the user to edit all the information regarding an Entity.
+The Entity Editor is able to modify:
+- General information on the Entity: name, level, hp, defenses, ..., abilities, notes (DONE)
+- Powers: name, level, attack/defense, on_hit, ..., notes, Powers List (DONE; TODO: add more known powers)
+- Conditions: lists the conditions affecting the character, when will it end, and a description of what happens)
+- Monster: TODO: lists information pertaining only to monsters
+- 'Commit&Save': when the tab is pressed, the Entity's details are passed back to the Initiative List (DONE)
+
+Need to complete:
+
+Encounter tab:
+  - Complete the encounter (calculate/distribute XP)
+  - 5 minute rest: for each player, allow healing surge to be spent. dialog should allow for +healing and +magic items which affect healing
+  - 8 hours rest: reset all dailies spent, hp back to maximum, etc.
+  - action points management
+  - load/save players|monsters as party to/from file
+
+- Ongoing damage/heal pop-up at beginning of round, dismissable
+- Did you save? pop-up at end of round
+
+Initiative List tab:
+- On the initiative list, Entity -> Attacks should display a dialog:
+  - choose power from list (description on bottom of dialog)
+  - select primary target, show relevant defense for the attack
+  - damage/heal/set condition/set ongoing damage/heal on target
+  - select secondary target(s), show relevant defense for the attack
+  - damage/heal/set condition/set ongoing damage/heal on secondary target(s)
+
+Entity management:
+- expended and no longer usable powers at bottom of list, in red
+- tickboxes / radio? list of actions the character has available:
+  - standard-equivalent actions
+  - move-equivalent actions
+  - minor-equivalent actions
+  - action point available -> kind of action-point-equivalent used
+- frame for notes specific to the character
+- if temp hps available, they should be decreased first in case of damage
+- should warn in case the damage just made the character Bloodied
+- overhealing should restore to hp_max and not above
+- temp hit points don't stack
+
+Powers management:
+  - on hit effect, [w] recalculated?
+  - on miss effect, ability recalculated? (i.e. damage Str bonus on miss)
+  - tracking powers used daily and in this encounter
+
+Monster tab:
+  - listbox for role?
+  - xp awarded for kill
+  - checkbox for minion? dies on a hit, not on a miss
+
+- Conditions currently affecting an Entity, with hover message describing it ?
+- Ongoing damage affecting an Entity, with hover message describing it
+
+- From just opened / new / reset encounter, add a Party to it (monsters or players)
+
+- Every round:
+  - initiative order list shows current entity?
+  Every turn:
+    - information displayed for current entity?
+    - POPUP ongoing damage, if any -> click to deal damage
+    - From list of powers, choose the one used, see above
+    - if no more actions available, enquire on action point?
+      - tick action point used, tick kind of action-point-equivalent action used
+    - no more actions available, click next
+    - POPUP for all saves the character needs to do
+    - POPUP for effects (beneficial) ending right now, for all entities
+    - NEXT entity
+
