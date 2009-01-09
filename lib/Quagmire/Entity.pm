@@ -60,11 +60,11 @@ sub surge_value {
 }
 
 sub modifier {
-        my ($self,$score) = @_;
-        return 0 if (!defined $score);
-        return 0 if ($score !~ /^\d+$/x); # not a number
-        $score -= 10;
-        return (($score-1)/2) if ($score % 2);
+	my ($self,$score) = @_;
+	return 0 if (!defined $score);
+	return 0 if ($score !~ /^\d+$/x); # not a number
+	$score -= 10;
+	return (($score-1)/2) if ($score % 2);
 	return ($score/2);
 }
 
