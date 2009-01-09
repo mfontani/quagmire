@@ -1,0 +1,8 @@
+#!/usr/bin/env perl -w
+use strict;
+our $VERSION = '0.01';
+our $AUTHORITY = 'cpan:MFONTANI';
+use lib './lib/';
+use Quagmire;
+my $enc = Quagmire->new;
+$enc->run;
