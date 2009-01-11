@@ -132,7 +132,7 @@ sub pdf_entity {
 	);
 	# Initiative count text (left)
 	{
-		my $initiative = "Initiative ";
+		my $initiative = "Initiative +";
 		$initiative .= $entity->initiative_bonus();
 		$DEBUG and print "Initiative text: >$initiative<\n";
 		$pdf->text($initiative, x => $_curx + 2, y => $_cury - $CLN +1,
@@ -246,57 +246,88 @@ sub pdf_entity {
 		$SHEET_WIDTH * 1
 	);
 
-=for TODO: working powers
+	# list POWERS
+	my $_CLN = $_cury - $CLN - $pdf->line_height*1.3*($entity->hp()/30 +1);
 
-	my $_CLN;
+=for TODO_implement_feats
 
-	if ($entity->monster and $DEBUG) {
-		$_CLN = $_cury - $CLN - $pdf->line_height*2.5*($entity->hp()/20 +1);
-		# shows powers and stuff
-		foreach my $p (sort keys %{$entity->{powers}}) {
-			$pdf->text("$p:",x => $_curx+2, y => $_CLN, align => 'left',
-				font => 'Helvetica', font_size => 7, fill_color => 'black');
-			$_CLN -= $pdf->line_height;
-
-			#my $powerstr = Data::Dumper::Dumper($entity->{powers}->{$p});
-			my $powerstr = YAML::Dump($entity->{powers}->{$p});
-			$powerstr =~ s/\s+/\ /;
-			my @str = split(/\n/,$powerstr);
-			foreach my $str (@str) {
-				$pdf->text($str,x => $_curx+2, y => $_CLN, align => 'left',
-					font => 'Helvetica', font_size => 5, fill_color => 'black');
-				$_CLN -= $pdf->line_height;
-			}
-		}
+	foreach my $f (@{$entity->{feats}}) {
+		$pdf->text("Feat: $f", x => $_curx+2, y => $_CLN, align => 'left',
+			font => 'Helvetica', font_size => 7, fill_color => 'black');
+		$_CLN -= $pdf->line_height;
 	}
-	if (!$entity->monster) {
-		$_CLN = $_cury - $CLN -$pdf->line_height - $pdf->line_height*1.5*(int($entity->hp()/20)+1.5);
-		foreach my $f (@{$entity->{feats}}) {
-			$pdf->text("Feat: $f", x => $_curx+2, y => $_CLN, align => 'left',
-				font => 'Helvetica', font_size => 7, fill_color => 'black');
-			$_CLN -= $pdf->line_height;
+
+=cut
+
+	foreach my $p (sort {$b->level <=> $a->level} @{$entity->powers}) {
+		my $powerdescr = '*POWER* ' . $p->name . ': ';
+		$powerdescr .= '*' . $p->frequency if ($p->frequency);
+		$powerdescr .= '*' . $p->action if ($p->action);
+		if ($p->range) {
+			$powerdescr .= ' (R: ' . $p->range . ')';
+		} else {
+			$powerdescr .= ' (PERS)';
 		}
-		foreach my $p (@{$entity->{powers}}) {
-			my $powertext = "Power: $p ";
-			if (defined($DnD4::Powers::POWERS{$p})) {
-				my $POWER = $DnD4::Powers::POWERS{$p};
-				$powertext .= " " . ucfirst($POWER->{race}) if (defined($POWER->{race}) && $POWER->{race} ne '');
-				$powertext .= " " . ucfirst($POWER->{class}) if (defined($POWER->{class}) && $POWER->{class} ne '');
-				$powertext .= " " . ucfirst($POWER->{usage}->{times}) . "x" if (defined($POWER->{usage}) && defined($POWER->{usage}->{times}));
-				$powertext .= " " . ucfirst($POWER->{usage}->{usage}) if (defined($POWER->{usage}) && defined($POWER->{usage}->{usage}));
-				$powertext .= " L $POWER->{level}" if (defined($POWER->{level}) && $POWER->{level} ne '');
-				$powertext .= " " . $POWER->{attack} . " vs " . $POWER->{defense} if (defined($POWER->{attack}) && defined($POWER->{defense}));
-				$powertext .= " D:" . $POWER->{on_hit}->{damage} if (defined($POWER->{on_hit}) && defined($POWER->{on_hit}->{damage}));
-				if (
-					defined($POWER->{usage}) && defined($POWER->{usage}->{usage}) && ($POWER->{usage}->{usage} !~ /will/) &&
-					defined($POWER->{usage}) && defined($POWER->{usage}->{times})) {
-					$powertext .= " [   ]" x $POWER->{usage}->{times} if ($POWER->{usage}->{times} =~ /^\d+$/);
+		$powerdescr .= ' (' . $p->keywords . ')' if ($p->keywords);
+		$pdf->text($powerdescr . ' [  ]',x => $_curx+2, y => $_CLN, align => 'left',
+			font => 'Helvetica', font_size => 5, fill_color => 'black');
+		{
+			my $hitdamdescr;
+			if ($p->attack) {
+				$hitdamdescr = '  Roll: ' . $p->attack;
+				my $mod;
+				if ($p->attack =~ /^\w\w\w$/) {
+					my $att = $p->attack;
+					$mod = '(+';
+					$mod .= int($entity->modifier($entity->$att()) + int($entity->level/2));
+					$mod .= ')';
+				} else {
+					$mod = '';
 				}
+				$hitdamdescr .= $mod;
 			}
-			$pdf->text("$powertext", x => $_curx+2, y => $_CLN, align => 'left',
-				font => 'Helvetica', font_size => 7, fill_color => 'black');
-			$_CLN -= $pdf->line_height;
+			$hitdamdescr .= ' vs ' . $p->defense if ($p->defense);
+			if ($hitdamdescr) {
+				$_CLN -= $pdf->line_height - 4;
+				$pdf->text($hitdamdescr, x => $_curx+2, y => $_CLN, align => 'left',
+					font => 'Helvetica', font_size => 5, fill_color => 'black');
+			}
 		}
+		if ($p->on_miss) {
+			my $miss = 'On miss: ' . $p->on_miss;
+			$pdf->text($miss, x => $_curx+2 + 100, y => $_CLN, align => 'left',
+				font => 'Helvetica', font_size => 5, fill_color => 'black');
+		}
+		if ($p->on_hit) {
+			my $hit = '  On hit: ' . $p->on_hit;
+			$pdf->text($hit, x => $_curx+2 + 200, y => $_CLN, align => 'left',
+				font => 'Helvetica', font_size => 5, fill_color => 'black');
+		}
+		if ($p->second_target) {
+			$_CLN -= $pdf->line_height - 4;
+			$pdf->text('  Secondary: ' . $p->second_target() , x => $_curx+2, y => $_CLN, align => 'left',
+				font => 'Helvetica', font_size => 5, fill_color => 'black');
+		}
+		if ($p->additional) {
+			$_CLN -= $pdf->line_height - 4 if (!$p->second_target);
+			my $add = 0;
+			$add = 100 if ($p->second_target);
+			$pdf->text('  Additional: ' . $p->additional() , x => $_curx+2 + $add, y => $_CLN, align => 'left',
+				font => 'Helvetica', font_size => 5, fill_color => 'black');
+		}
+		if ($p->notes) {
+			my @notes = split(/\n/,$p->notes);
+			foreach my $note (@notes) {
+				$_CLN -= $pdf->line_height - 5;
+				$pdf->text('  note: ' . $note, x => $_curx+2, y => $_CLN, align => 'left',
+					font => 'Helvetica', font_size => 4, fill_color => 'black');
+			}
+		}
+		$_CLN -= $pdf->line_height;
+	}
+
+=for TODO_items_implemented
+
 		foreach my $i (@{$entity->{items}}) {
 			my $itemtext = "Item: $i";
 			my $itemdaily = '';
@@ -331,11 +362,9 @@ sub pdf_entity {
 				$_CLN -= $pdf->line_height;
 			}
 		}
-	}
 
 =cut
 
-	#$pdf->saveas();
 	return $pdf;
 }
 
