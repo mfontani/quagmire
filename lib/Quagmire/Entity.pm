@@ -88,6 +88,36 @@ sub modifier {
 	return ($score/2);
 }
 
+sub heal {
+        my $S = shift;
+        my $amount = shift;
+        return if (!defined $amount);
+        $amount = int($amount);
+        return if (!$amount);
+        if ($S->hp_current() + $amount >= $S->hp) {
+                $S->hp_current($S->hp());
+                return;
+        }
+        $S->hp_current($S->hp_current + $amount);
+}
+
+sub damage {
+        my $S = shift;
+        my $amount = shift;
+        return if (!defined $amount);
+        $amount = int($amount);
+        return if (!$amount);
+        my $t = $S->hp_temp();
+        if ($amount > $t) {
+                $amount -= $t;
+                $S->hp_temp(0);
+                $S->hp_current($S->hp_current - $amount);
+        } else {
+                $t -= $amount;
+                $S->hp_temp($t);
+        }
+}
+
 sub BUILD {
         my $S = shift;
         if ($S->hp_current == 0) {
