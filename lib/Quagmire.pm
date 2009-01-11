@@ -121,8 +121,30 @@ sub init_encounter_tab {
 	$nb_g->Button(
 		-text => 'Next entity',
 		-command => sub {
+			# sets all initiatives if not already set
+			my %mob;
+			foreach my $ent (@{$s->encounter->entities}) {
+				if (!$ent->initiative()) {
+					if ($ent->monster() && defined $mob{$ent->name}) {
+						$ent->initiative($mob{$ent->name});
+						next;
+					}
+					my $D = Quagmire::Entity::Initiative->new(tk=>$s,entity=>$ent);
+					my $r = $D->show();
+					$ent->initiative($r);
+					if ($ent->monster()) {
+						$mob{$ent->name} = $r;
+						foreach my $monster (@{$s->encounter->monsters->entities}) {
+							$mob{$monster->name} = $monster->initiative if ($monster->initiative());
+							$monster->initiative($mob{$monster->name}) if (!$monster->initiative && defined($mob{$monster->name}));
+						}
+					}
+					$s->_tk_initiative->refresh();
+				}
+			}
+			$s->_tk_initiative->refresh();
 			$s->refresh;
-			carp "TODO: Next entity!";
+			warn "TODO: Next entity!";
 		}
 	)->pack(-fill=>'x');
 
