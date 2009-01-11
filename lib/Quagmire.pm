@@ -9,7 +9,6 @@ use Tk::ItemStyle;
 use Tk::FileSelect;
 use Quagmire::Encounter;
 use Quagmire::GUI::Tk::Initiative;
-use Quagmire::GUI::Tk::Status;
 
 our $VERSION   = '0.01';
 our $AUTHORITY = 'cpan:MFONTANI';

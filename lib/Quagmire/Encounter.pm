@@ -1,6 +1,7 @@
 package Quagmire::Encounter;
 use Moose;
 use MooseX::Storage;
+use Quagmire::Encounter::Status;
 use Quagmire::Party;
 use YAML;
 
@@ -15,7 +16,7 @@ has 'monsters_filename' => (is=>'rw',isa=>'Str',required=>1,default=>'');
 has 'party' => (is=>'rw',isa=>'Quagmire::Party',required=>1,default=>sub{Quagmire::Party->new});
 has 'party_filename' => (is=>'rw',isa=>'Str',required=>1,default=>'');
 
-has 'status' => (is => 'rw', isa=>'Quagmire::GUI::Tk::Status',required=>1,default=>sub{Quagmire::GUI::Tk::Status->new});
+has 'status' => (is => 'rw', isa=>'Quagmire::Encounter::Status',required=>1,default=>sub{Quagmire::Encounter::Status->new});
 
 # Entities is just a shortcut to list of party members then monsters
 sub entities {
