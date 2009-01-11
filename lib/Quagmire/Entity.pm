@@ -1,5 +1,6 @@
 package Quagmire::Entity;
 use Quagmire::Entity::Condition;
+use Quagmire::Power;
 use Moose;
 use MooseX::Storage;
 use YAML;
@@ -60,8 +61,17 @@ sub _ability_mod {
         my $abi = shift;
         $S->modifier($abi) if (!$S->monster());
         my $_abi = "_${abi}_mod";
-        return $S->$_abi(shift);
+        my $new_value = shift;
+        my $ab;
+        if (defined $new_value) {
+                $ab = $S->$_abi($new_value);
+        } else {
+                $ab = $S->$_abi();
+        }
+        return 0 if (!defined $ab);
+        return $ab;
 }
+
 sub str_mod {shift->_ability_mod('str',shift)}
 sub con_mod {shift->_ability_mod('con',shift)}
 sub dex_mod {shift->_ability_mod('dex',shift)}
