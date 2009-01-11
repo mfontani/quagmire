@@ -183,7 +183,6 @@ sub init_encounter_tab {
 			carp "Reset encounter!"
 		}
 	)->pack(-fill=>'x');
-
 	$nb_a->Button(
 		-text=>'Quit',
 		-command=>sub{
@@ -196,6 +195,73 @@ sub init_encounter_tab {
 			$s->window->destroy if ($choice eq 'Yes');
 		},
 	)->pack(-side=>'bottom',-fill=>'x');
+
+	$nb_a->Button(
+		-text=>'Load/Replace Party',
+		-command=>sub {
+			my $fd = $s->window->FileSelect(
+				-directory => dirname($s->encounter->status->filename), # start dir
+			);
+			my $fn = $fd->Show();
+			return $s if (!defined $fn);
+			my $p;
+			eval {$p = Quagmire::Party->load($fn);};
+			my $err= $@;
+			if ($err) {
+				$s->status('Problems loading party: ' . $err);
+				return;
+			}
+			$s->encounter->party->clone_from($p);
+			$s->_tk_initiative->refresh();
+			$s->status('Loaded party from ' . $fn);
+		},
+	)->pack(-side=>'bottom',-fill=>'x');
+	$nb_a->Button(
+		-text=>'Save Party',
+		-command=>sub {
+			my $fd = $s->window->FileSelect(
+				-directory => dirname($s->encounter->status->filename), # start dir
+			);
+			my $fn = $fd->Show();
+			return $s if (!defined $fn);
+			$s->encounter->party->store($fn);
+			$s->status('Saved party as ' . $fn);
+		}
+	)->pack(-side=>'bottom',-fill=>'x');
+
+	$nb_a->Button(
+		-text=>'Load/Replace Monsters',
+		-command=>sub {
+			my $fd = $s->window->FileSelect(
+				-directory => dirname($s->encounter->status->filename), # start dir
+			);
+			my $fn = $fd->Show();
+			return $s if (!defined $fn);
+			my $p;
+			eval {$p = Quagmire::Party->load($fn);};
+			my $err= $@;
+			if ($err) {
+				$s->status('Problems loading monsters: ' . $err);
+				return;
+			}
+			$s->encounter->monsters->clone_from($p);
+			$s->_tk_initiative->refresh();
+			$s->status('Loaded monsters from ' . $fn);
+		},
+	)->pack(-side=>'bottom',-fill=>'x');
+	$nb_a->Button(
+		-text=>'Save Monsters',
+		-command=>sub {
+			my $fd = $s->window->FileSelect(
+				-directory => dirname($s->encounter->status->filename), # start dir
+			);
+			my $fn = $fd->Show();
+			return $s if (!defined $fn);
+			$s->encounter->monsters->store($fn);
+			$s->status('Saved monsters as ' . $fn);
+		}
+	)->pack(-side=>'bottom',-fill=>'x');
+
 	return $s;
 }
 
