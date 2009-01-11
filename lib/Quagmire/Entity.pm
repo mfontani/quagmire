@@ -78,5 +78,12 @@ sub modifier {
 	return ($score/2);
 }
 
+sub BUILD {
+        my $S = shift;
+        if ($S->hp_current == 0) {
+                $S->hp_current($S->hp);
+        }
+}
+
 __PACKAGE__->meta->make_immutable();
 1;
