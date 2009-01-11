@@ -36,11 +36,7 @@ has 'will' => (is=>'rw',isa=>'Int',default=>0,required=>1);
 
 foreach my $abi (qw/str con dex int wis cha/) {
         has $abi => (is=>'rw',isa=>'Int',default=>0,required=>1);
-        has "${abi}_mod" => (is=>'rw',isa=>'Int',lazy=>1,required=>1,default=>sub {
-                my $S = shift;
-                return sub {$S->modifier($abi);} if (!$S->monster());
-                return 0;
-        });
+        has "_${abi}_mod"  => (is=>'rw',isa=>'Int',default=>0,required=>1); # for mobs
 }
 
 # has 'daily_powers_used' => (is=>'rw',isa=>'Int',default=>0,required=>1);
@@ -58,6 +54,20 @@ has 'page' => (is=>'rw',isa=>'Str',required=>1,default=>0);
 sub surge_value {
 	return int (shift->hp / 4);
 }
+
+sub _ability_mod {
+        my $S = shift;
+        my $abi = shift;
+        $S->modifier($abi) if (!$S->monster());
+        my $_abi = "_${abi}_mod";
+        return $S->$_abi(shift);
+}
+sub str_mod {shift->_ability_mod('str',shift)}
+sub con_mod {shift->_ability_mod('con',shift)}
+sub dex_mod {shift->_ability_mod('dex',shift)}
+sub int_mod {shift->_ability_mod('int',shift)}
+sub wis_mod {shift->_ability_mod('wis',shift)}
+sub cha_mod {shift->_ability_mod('cha',shift)}
 
 sub modifier {
 	my ($self,$score) = @_;
