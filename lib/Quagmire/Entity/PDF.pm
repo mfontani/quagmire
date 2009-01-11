@@ -365,6 +365,16 @@ sub pdf_entity {
 
 =cut
 
+	if ($entity->notes) {
+		my @notes = split(/\n/,$entity->notes);
+		foreach my $note (@notes) {
+			$_CLN -= $pdf->line_height - 5;
+			$pdf->text('  note: ' . $note, x => $_curx+2, y => $_CLN, align => 'left',
+				font => 'Helvetica', font_size => 4, fill_color => 'black');
+		}
+		$_CLN -= $pdf->line_height;
+	}
+
 	return $pdf;
 }
 
