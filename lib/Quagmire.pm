@@ -18,7 +18,7 @@ has 'encounter' => (is=>'rw',isa=>'Quagmire::Encounter',required=>1,default=>sub
 
 has 'window' => (is=>'ro',isa=>'Any',required=>1,default=>sub{
 	my $mw = MainWindow->new(
-		-title => 'DnD4 DM Shell',
+		-title => 'Quagmire v.' . $VERSION,
 		#-width => '850',
 	);
 	Tk::CmdLine::SetArguments();
