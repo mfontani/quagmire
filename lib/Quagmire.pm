@@ -35,10 +35,14 @@ has '_tk_initiative' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 has '_tk_entity' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 
 has '_tk_roundno' => (is=>'rw',isa=>'Any',required=>1,default=>'');
+has '_tk_roundwho' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 
 sub refresh {
 	my $s = shift;
 	$s->_tk_roundno->configure(-text => "Round #" . $s->encounter->status->round);
+	$s->_tk_roundwho->configure(-text => 'Turn: ' .
+		(defined $s->encounter->turn ? $s->encounter->turn->name : '?')
+	);
 	return $s;
 }
 
@@ -118,6 +122,11 @@ sub init_encounter_tab {
 			-text => "Round ",
 		)->pack(-fill=>'x')
 	);
+	$s->_tk_roundwho(
+		$nb_g->Label(
+			-text => "Turn ",
+		)->pack(-fill=>'x')
+	);
 	$nb_g->Button(
 		-text => 'Next entity',
 		-command => sub {
@@ -142,9 +151,12 @@ sub init_encounter_tab {
 					$s->_tk_initiative->refresh();
 				}
 			}
-			$s->_tk_initiative->refresh();
-			$s->refresh;
+			my $ent = $s->encounter->next;
+			return if (!defined $ent);
+			warn "Next entity: ", $ent, " (", $ent->name, ")";
 			warn "TODO: Next entity!";
+			$s->_tk_initiative->refresh($ent);
+			$s->refresh;
 		}
 	)->pack(-fill=>'x');
 
