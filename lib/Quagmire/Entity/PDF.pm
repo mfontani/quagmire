@@ -133,7 +133,7 @@ sub pdf_entity {
 	# Initiative count text (left)
 	{
 		my $initiative = "Initiative ";
-		$initiative .= $entity->initiative_bonus() if ($entity->monster);
+		$initiative .= $entity->initiative_bonus();
 		$DEBUG and print "Initiative text: >$initiative<\n";
 		$pdf->text($initiative, x => $_curx + 2, y => $_cury - $CLN +1,
 			align => 'left', font => 'Helvetica', font_size => $TOOLTIP_FONT_SIZE, fill_color => 'black',
