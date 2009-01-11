@@ -45,5 +45,41 @@ sub BUILD {
 	}
 }
 
+sub reset {
+	my $s = shift;
+	foreach my $ent (@{$s->entities}) {
+		$ent->initiative(0);
+		$ent->hp_temp(0);
+		$ent->hp_current($ent->hp());
+	}
+	$s->status->turn(undef);
+	$s->status->round(0);
+}
+
+sub turn {shift->status->turn}
+
+sub next {
+	my $s = shift;
+	my @ordered = sort {$b->initiative <=> $a->initiative} @{$s->entities};
+	if (!defined $s->status->turn) {
+		$s->status->turn($ordered[0]);
+		return $ordered[0];
+	}
+	my $curr = $s->status->turn();
+	foreach my $nent (0..$#ordered) {
+		if ($ordered[$nent] == $curr) {
+			if ($nent == $#ordered) {
+				warn "new round!";
+				$s->status->round($s->status->round+1);
+				$s->status->turn($ordered[0]);
+				return $ordered[0];
+			}
+			$s->status->turn($ordered[$nent+1]);
+			return $ordered[$nent+1];
+		}
+	}
+	warn "HELP!";
+}
+
 __PACKAGE__->meta->make_immutable();
 1;
