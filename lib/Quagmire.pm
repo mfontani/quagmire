@@ -153,8 +153,6 @@ sub init_encounter_tab {
 			}
 			my $ent = $s->encounter->next;
 			return if (!defined $ent);
-			warn "Next entity: ", $ent, " (", $ent->name, ")";
-			warn "TODO: Next entity!";
 			$s->_tk_initiative->refresh($ent);
 			$s->refresh;
 		}
