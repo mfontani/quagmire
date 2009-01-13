@@ -8,7 +8,23 @@ with Storage('format' => 'YAML', 'io' => 'File');
 
 has 'filename' => (is => 'rw', isa => 'Str', default=>'', required=>1);
 has 'round'  => (is => 'rw', isa => 'Int', default=>0, required=>1);
-has 'turn' => (is=>'rw',isa=>'Maybe[Quagmire::Entity]',required=>1,default=>sub{undef});
+
+our $_turn;
+our $_turn_name;
+sub turn {
+	my $S = shift;
+	my $set = shift;
+	if (!defined $set) {
+		return $_turn
+	}
+	if (ref $set eq 'Quagmire::Entity') {
+		$_turn = $set;
+		$_turn_name = $set->name;
+	} else {
+		warn "Can't turn() a non-Entity: ", ref $set;
+	}
+	return $_turn;
+}
 
 __PACKAGE__->meta->make_immutable;
 1;

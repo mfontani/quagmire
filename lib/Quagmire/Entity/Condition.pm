@@ -5,7 +5,7 @@ our $VERSION = '0.01';
 our $AUTHORITY = 'cpan:MFONTANI';
 
 has 'name' => (is=>'rw',isa=>'Str',required=>1,default=>'');
-has 'until' => (is=>'rw',isa=>'Int',required=>1,default=>-1); # -1 == save ends
+has 'until' => (is=>'rw',isa=>'Int',required=>1,default=>-1); # -1 == save ends, -2 DELETE IT!
 has 'description' => (is=>'rw',isa=>'Str',required=>1,default=>'');
 
 # what the condition may modify
@@ -36,7 +36,7 @@ has 'resist_all_damage' => (is=>'rw',isa=>'Int',required=>1,default=>0);
 has 'aware_surroundings' => (is=>'rw',isa=>'Int',required=>1,default=>1);
 has 'ages' => (is=>'rw',isa=>'Int',required=>1,default=>1);
 has 'limited_speed' => (is=>'rw',isa=>'Maybe[Int]',required=>1,default=>sub{undef});
-has 'damage_modifier' => (is=>'rw',isa=>'Int',required=>1,default=>1); # 1 == 100%
+has 'damage_modifier' => (is=>'rw',isa=>'Num',required=>1,default=>1); # 1 == 100%
 has 'ongoing_damage_modifier' => (is=>'rw',isa=>'Int',required=>1,default=>1); # 1 == 100%
 
 our %descr = (
@@ -200,12 +200,48 @@ sub choose {
 		}, $P_list, $S
 		],
 	);
-	return $dlg->Show;
+	$dlg->Subwidget('top')->Label(-text=>'Until round')->pack(-side=>'top',-fill=>'x',-expand=>1);
+	my $round = -1;
+	my $E = $dlg->Subwidget('top')->Entry(
+		-textvariable => \$round,
+	)->pack(
+		-side=>'top',
+		-fill=>'x',
+		-expand=>1,
+	);
+	my $rc = $dlg->Show;
+	return 0 if $rc =~ /cancel/i;
+	$S->until($round);
+	return 1;
 }
 
 sub BUILD {
 	my $S = shift;
 	$S->_refresh;
+}
+
+sub tk_show_saves {
+	my $S = shift;
+	my $tk = shift;
+	die "tk_show_saves(): need tk to draw to!" if (!defined $tk);
+	my $ent = shift;
+	die "tk_show_saves(): need entity!" if (!defined $ent);
+	my $dlg = $tk->DialogBox(
+		-title => 'ST ' . $ent->name,
+		-buttons => [qw/Ok Cancel/],
+		-default_button => 'Ok',
+	);
+	$dlg->Subwidget('top')->Label(
+		-text => 'Does ' . $ent->name . ' save vs ' . $S->name . '?',
+	)->pack(
+		-side=>'top',
+		-fill=>'x',
+		-expand=>1,
+	);
+	my $rc = $dlg->Show;
+	return 0 if $rc =~ /cancel/i;
+	$S->until(-2);
+	return 1;
 }
 
 no Moose;

@@ -20,6 +20,7 @@ has 'window' => (is=>'ro',isa=>'Any',required=>1,default=>sub{
 		-title => 'Quagmire v.' . $VERSION,
 		#-width => '850',
 	);
+	$mw->geometry('850x400');
 	Tk::CmdLine::SetArguments();
 	return $mw;
 });
@@ -36,6 +37,7 @@ has '_tk_entity' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 
 has '_tk_roundno' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 has '_tk_roundwho' => (is=>'rw',isa=>'Any',required=>1,default=>'');
+has '_tk_roundnext' => (is=>'rw',isa=>'Any',required=>1,default=>'');
 
 sub refresh {
 	my $s = shift;
@@ -43,6 +45,7 @@ sub refresh {
 	$s->_tk_roundwho->configure(-text => 'Turn: ' .
 		(defined $s->encounter->turn ? $s->encounter->turn->name : '?')
 	);
+	$s->_tk_roundnext->configure(-text => 'Next: ' . $s->encounter->next('pretend')->name);
 	return $s;
 }
 
@@ -52,6 +55,19 @@ sub status {
 	chomp($txt);
 	$s->_status->configure(-text => $txt);
 	return $s;
+}
+
+sub info {
+	my $s = shift;
+	my $title = shift or die "info(): need title";
+	my $msg = shift or die "info(): need message";
+	my $dlg = $s->window->DialogBox(
+		-title => $title,
+		-buttons => [qw/Ok/],
+		-default_button => 'Ok',
+	);
+	$dlg->Subwidget('top')->Label(-text=>$msg)->pack(-side=>'top',-fill=>'x',-expand=>1);
+	return $dlg->Show;
 }
 
 sub BUILD {
@@ -81,8 +97,10 @@ sub BUILD {
 	$s->_initiative_frame($tk->Frame);
 	$rightpaned->add($s->_initiative_frame);
 	#$s->_entity_frame($tk->LabFrame(-label=>'Entity'));
-	$s->_entity_frame($tk->Frame);
-	$rightpaned->add($s->_entity_frame);
+	$s->_entity_frame($tk->Toplevel(title=>'test'));
+	#$rightpaned->add($s->_entity_frame);
+	$s->_entity_frame->protocol('WM_DELETE_WINDOW',[sub{shift->withdraw},$s->_entity_frame]);
+	$s->_entity_frame->withdraw;
 	$parentpaned->add($rightpaned);
 	$s->_tk_initiative(
 		Quagmire::GUI::Tk::Initiative->new(
@@ -110,6 +128,25 @@ sub BUILD {
 	return $s;
 }
 
+sub load_encounter {
+	my ($s, $fn) = @_;
+	if (!defined $fn || !-f $fn) {
+		$s->status('Error: new encounter file name does not exist');
+		return $s;
+	}
+	my $rc = eval{$s->encounter(Quagmire::Encounter->load($fn))};
+	if ($@) {
+		my $err = $@;
+		$s->status('Error loading encounter from file ',$fn);
+		carp 'Error loading encounter from file',$fn,': ',$err;
+		return $s;
+	}
+	$s->_tk_initiative->encounter($s->encounter);
+	$s->_tk_initiative->refresh();
+	$s->refresh;
+	$s->status('Loaded encounter from file ', $fn);
+}
+
 sub init_encounter_tab {
 	my $s = shift;
 	my $nb = $s->_encounter_frame->NoteBook->pack(
@@ -125,6 +162,11 @@ sub init_encounter_tab {
 	$s->_tk_roundwho(
 		$nb_g->Label(
 			-text => "Turn ",
+		)->pack(-fill=>'x')
+	);
+	$s->_tk_roundnext(
+		$nb_g->Label(
+			-text => "Next ",
 		)->pack(-fill=>'x')
 	);
 	$nb_g->Button(
@@ -151,8 +193,26 @@ sub init_encounter_tab {
 					$s->_tk_initiative->refresh();
 				}
 			}
+			# Anything to save against for current entity?
+			my $lastent = $s->encounter->turn;
+			if (defined $lastent) {
+				foreach my $cond (@{$lastent->conditions},@{$lastent->ongoing}) {
+					if ($cond->until >0 && $cond->until <= $s->encounter->status->round) {
+						$s->info($lastent->name,'Is no longer affected by ' . $cond->name);
+						$cond->until(-2);
+					}
+					if ($cond->until == -1) { # save ends
+						$cond->tk_show_saves($s->window,$lastent);
+					}
+				}
+				$lastent->update_conditions();
+			}
+			# NEXT ENTITY!
 			my $ent = $s->encounter->next;
 			return if (!defined $ent);
+			foreach my $ong (@{$ent->ongoing}) {
+				$ong->show(); # also deals damage/heals if wanted
+			}
 			$s->_tk_initiative->refresh($ent);
 			$s->refresh;
 		}
@@ -168,26 +228,13 @@ sub init_encounter_tab {
 				#-defaultextension => 'yaml',
 			);
 			my $fn = $fd->Show();
-			if (!defined $fn || !-f $fn) {
-				$s->status('Error: new encounter file name does not exist');
-				return $s;
-			}
-			my $rc = eval{$s->encounter(Quagmire::Encounter->load($fn))};
-			if ($@) {
-				my $err = $@;
-				$s->status('Error loading encounter from file ',$fn);
-				carp 'Error loading encounter from file',$fn,': ',$err;
-				return $s;
-			}
-			$s->_tk_initiative->encounter($s->encounter);
-			$s->_tk_initiative->refresh();
-			$s->status('Loaded encounter from file ', $fn);
+			$s->load_encounter($fn);
 		}
 	)->pack(-fill=>'x');
 	$nb_a->Button(
 		-text=>'Save Encounter',
 		-command=>sub {
-			carp "Save Encounter\n";
+			warn "Save Encounter\n";
 			if (! $s->encounter->status->filename) {
 				my $fd = $s->window->FileSelect(
 				);

@@ -1,5 +1,6 @@
 package Quagmire::Entity;
 use Quagmire::Entity::Condition;
+use Quagmire::Entity::Ongoing;
 use Quagmire::Power;
 use Moose;
 use MooseX::Storage;
@@ -47,6 +48,7 @@ has 'powers' => (is=>'rw',isa=>'ArrayRef[Quagmire::Power]',default=>sub{[]},requ
 has 'notes' => (is=>'rw',isa=>'Str',default=>'',required=>1);
 
 has 'conditions' => (is=>'rw',isa=>'ArrayRef[Quagmire::Entity::Condition]',required=>1,default=>sub{[]});
+has 'ongoing' => (is=>'rw',isa=>'ArrayRef[Quagmire::Entity::Ongoing]',required=>1,default=>sub{[]});
 
 has 'xp' => (is=>'rw',isa=>'Int',required=>1,default=>0);
 has 'monster' => (is=>'rw',isa=>'Int',required=>1,default=>0);
@@ -88,17 +90,26 @@ sub modifier {
 	return ($score/2);
 }
 
+sub bloodied {my $self = shift; $self->hp_current <= int($self->hp/2) ? 1 : 0}
+
 sub heal {
         my $S = shift;
         my $amount = shift;
         return if (!defined $amount);
         $amount = int($amount);
         return if (!$amount);
+        my $tk = shift;
+        return $S->damage(-$amount,$tk) if ($amount<0);
+        my $bl = $S->bloodied;
         if ($S->hp_current() + $amount >= $S->hp) {
                 $S->hp_current($S->hp());
-                return;
+        } else {
+                $S->hp_current($S->hp_current + $amount);
         }
-        $S->hp_current($S->hp_current + $amount);
+        return if (!defined $tk);
+        if ($bl && !$S->bloodied) {
+                $tk->info($S->name,'Is NO LONGER bloodied, at ' . $S->hp_current . '/' . $S->hp . ' (' . $S->hp_temp . 'T)');
+        }
 }
 
 sub damage {
@@ -107,7 +118,10 @@ sub damage {
         return if (!defined $amount);
         $amount = int($amount);
         return if (!$amount);
+        return $S->heal(-$amount) if ($amount<0);
+        my $tk = shift;
         my $t = $S->hp_temp();
+        my $bl = $S->bloodied;
         if ($amount > $t) {
                 $amount -= $t;
                 $S->hp_temp(0);
@@ -116,6 +130,10 @@ sub damage {
                 $t -= $amount;
                 $S->hp_temp($t);
         }
+        return if (!defined $tk);
+        if ($S->bloodied && !$bl) {
+                $tk->info($S->name,'Is now BLOODIED, at ' . $S->hp_current . '/' . $S->hp . ' (' . $S->hp_temp . 'T)');
+        }
 }
 
 sub BUILD {
@@ -123,6 +141,14 @@ sub BUILD {
         if ($S->hp_current == 0) {
                 $S->hp_current($S->hp);
         }
+}
+
+sub update_conditions {
+        my $S = shift;
+        my @conditions = grep {$_->until >= -1} @{$S->conditions};
+        my @ongoing = grep {$_->until >= -1} @{$S->ongoing};
+        $S->conditions(\@conditions);
+        $S->ongoing(\@ongoing);
 }
 
 __PACKAGE__->meta->make_immutable();

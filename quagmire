@@ -6,4 +6,8 @@ our $AUTHORITY = 'cpan:MFONTANI';
 use lib './lib/';
 use Quagmire;
 my $enc = Quagmire->new;
+my $fn = shift;
+if (defined $fn) {
+	$enc->load_encounter($fn);
+}
 $enc->run;

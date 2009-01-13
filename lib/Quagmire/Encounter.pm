@@ -60,21 +60,34 @@ sub turn {shift->status->turn}
 
 sub next {
 	my $s = shift;
+	my $pretend = shift;
+	$pretend = 0 if (!defined $pretend);
 	my @ordered = sort {$b->initiative <=> $a->initiative} @{$s->entities};
-	if (!defined $s->status->turn) {
+	if (!defined $s->status->turn || (!grep {$s->turn == $_} @ordered)) {
+		if ($pretend) {
+			return $ordered[0] // Quagmire::Entity->new(name=>'??');
+		}
+		return Quagmire::Entity->new(name=>'??') if (!defined $ordered[0]);
 		$s->status->turn($ordered[0]);
+		return $s->next() if ($s->status->turn->hp_current<0);
 		return $ordered[0];
 	}
 	my $curr = $s->status->turn();
 	foreach my $nent (0..$#ordered) {
 		if ($ordered[$nent] == $curr) {
 			if ($nent == $#ordered) {
-				warn "new round!";
-				$s->status->round($s->status->round+1);
-				$s->status->turn($ordered[0]);
+				if (!$pretend) {
+					warn "new round!";
+					$s->status->round($s->status->round+1);
+					$s->status->turn($ordered[0]);
+				}
+				return $s->next($pretend) if ($ordered[0]->hp_current<0);
 				return $ordered[0];
 			}
-			$s->status->turn($ordered[$nent+1]);
+			if (!$pretend) {
+				$s->status->turn($ordered[$nent+1]);
+			}
+			return $s->next($pretend) if ($ordered[$nent+1]->hp_current<0);
 			return $ordered[$nent+1];
 		}
 	}
